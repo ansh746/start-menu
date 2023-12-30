@@ -1,15 +1,3 @@
-## continue-screen-icons
-
-This code takes the party that the player has and prints it to the continue screen.  This also sacrifices the possibility of the Mystery Gift option, but that remains unused in hacks as-is.
-
-![](animated_icons.gif)
-
-Alternatively, if you just want it to print to the side of the Continue menu such that it overlaps a little with the borders and preserves the Mystery Gift option:
-
-![](to_the_side.png)
-
-Just revert to commit [``4c7db384``](https://github.com/BluRosie/firegold-code/commit/4c7db38482e96da1ee9156817f13ec0071671c20) and build using that.
-
 ### Build Instructions
 
 Build the same as the CFRU:  `python scripts/make.py`
