@@ -1,4 +1,4 @@
-I ii### Build Instructions
+### Build Instructions
 
 Build the same as the CFRU:  `python scripts/make.py`
 
