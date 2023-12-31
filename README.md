@@ -1,4 +1,4 @@
-### Build Instructions
+I ii### Build Instructions
 
 Build the same as the CFRU:  `python scripts/make.py`
 
@@ -47,6 +47,6 @@ This won't actually modify `BPRE0.gba`, instead your output will be in `test.gba
 
 Research made possible by [pokeemerald](https://github.com/pret/pokeemerald) and [pokefirered](https://github.com/pret/pokefirered).
 
-Spherical Ice initially made the [Unown Report code](https://github.com/sphericalice/bpre-unown-report).  I forked it and ported it to the [CFRU's build system](https://github.com/BluRosie/bpre-unown-report).
+Spherical Ice initially made the [Unown Report code](https://github.com/sphericalice/bpre-unown-report).It was forked and ported to the [CFRU's build system](https://github.com/BluRosie/bpre-unown-report).
 
 Skeli made the [build system used in the CFRU](https://github.com/Skeli789/Complete-Fire-Red-Upgrade) which is used here.
