@@ -180,7 +180,7 @@ gTextflags = 0x3003E50;
 /* Save RAM */
 gSaveDataBuffer = 0x02039A38;
 gSaveBlock1 = 0x3005008;
-gSaveBlock2 = 0x300500C;
+gSaveBlock2Ptr = 0x300500C;
 gSaveBlock3 = 0x3005010;
 gFirstSaveSector = 0x3005380;
 gSaveCounter = 0x3005390;
@@ -224,7 +224,7 @@ gScanlineEffect = 0x2039600;
 /* Data RAM */
 gTasks = 0x3005090;
 gMain = 0x30030F0;
-
+gHelpSystemEnabled = 0x3005ecc;
 /* Audio RAM */
 gWarpMusicDisable = 0x2031DD8;
 sCurrentMapMusic = 0x3000FC0;
@@ -941,7 +941,6 @@ CB2_ReturnToField = 0x80567DC | 1;
 CB2_ReturnToFieldLocal = 0x8056808 | 1;
 CB2_ReturnToFieldLink = 0x8056854 | 1;
 CB2_ReturnToFieldFromMultiplayer = 0x8056854 | 1;
-CB2_ReturnToFieldWithOpenMenu = 0x80568A8 | 1;
 CB2_ReturnToFieldContinueScript = 0x80568C4 | 1;
 CB2_ReturnToFieldContinueScriptPlayMapMusic = 0x80568E0 | 1;
 MapGridGetZCoordAt = 0x8058D44 | 1;
@@ -1899,3 +1898,13 @@ PrintBadgeCount = 0x0800cfc4|1;
 
 Task_PrintMainMenuText = 0x0800c7a0 |1;
 WriteSequenceToBgTilemapBuffer = 0x08002590|1;
+SetBGMVolume_SuppressHelpSystemReduction = 0x8072474 | 1; 
+BGMVolumeMax_EnableHelpSystemReduction = 0x807249c | 1; 
+Sin2 = 0x8044e6c |1; 
+DoClosePokedex = 0x8102798 | 1; 
+CB2_OpenPokedexFromStartMenu = 0x810275c | 1;
+CB2_PartyMenuFromStartMenu = 0x8126eb0 | 1;
+ShowPlayerTrainerCard = 0x808b698 | 1;
+CB2_OptionsMenuFromStartMenu = 0x8088388 | 1;
+Field_AskSaveTheGame = 0x806f67c | 1; 
+StdTextPal = 0x841f408;

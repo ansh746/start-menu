@@ -1,0 +1,14 @@
+#org @gText_StartMenu_Pokedex
+POK[06]DEX
+
+#org @gText_StartMenu_Pokemon
+POK[06]MON
+
+#org @gText_StartMenu_Bag 
+BAG
+
+#org @gText_StartMenu_Save
+SAVE
+
+#org @gText_StartMenu_Option
+OPTIONS
