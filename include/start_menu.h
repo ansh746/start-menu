@@ -12,6 +12,7 @@
 #define HSPACING 21
 #define VSPACING 5 
 
+
 #define icon_template(gfxtag) {.tileTag = (u16) gfxtag, .paletteTag = (u16) gfxtag, .oam = &sIconOamData, .anims = sAnimCmdTable_Icon, .images = NULL,.affineAnims = gDummySpriteAffineAnimTable, .callback = StartMenuIconCallback}
 enum BGs
 {
@@ -41,9 +42,7 @@ enum
   STARTMENU_PLAYER, 
   STARTMENU_SAVE,
   STARTMENU_OPTION,
-  STARTMENU_EXIT,
-  STARTMENU_RETIRE,
-  STARTMENU_PLAYER2, 
+  STARTMENU_OPTION2,
   MAX_STARTMENU_ITEMS
 } ;
 
@@ -103,7 +102,18 @@ extern const u8 gText_StartMenu_Pokemon[];
 extern const u8 gText_StartMenu_Bag[];
 extern const u8 gText_StartMenu_Player[];
 extern const u8 gText_StartMenu_Save[];
-extern const u8 gText_StartMenu_Option[];
+extern const u8 gText_StartMenu_Option[]; 
+extern const u8 gText_Sun[];
+extern const u8 gText_Mon[];
+extern const u8 gText_Tue[];
+extern const u8 gText_Wed[];
+extern const u8 gText_Thu[];
+extern const u8 gText_Fri[];
+extern const u8 gText_Sat[]; 
+extern const u8 gText_AM[]; 
+extern const u8 gText_PM[]; 
+extern const u8 gText_StartMenu_Option2[];
+
 static const struct BgTemplate sStartMenuBgTemplates[] =
 {
 	[BG_TEXT] =
@@ -321,6 +331,12 @@ static struct StartMenuIcon StartMenuIconTable[] =
     .spritepalette = {optionsPal, GFXTAG_OPTIONS},
     .sprtemplate = icon_template(GFXTAG_OPTIONS)
   },
+  [STARTMENU_OPTION2] =
+  {
+    .spritesheet = {optionsTiles, 32*32, GFXTAG_OPTIONS},
+    .spritepalette = {optionsPal, GFXTAG_OPTIONS},
+    .sprtemplate = icon_template(GFXTAG_OPTIONS)
+  },
 };
 
 // Text 
@@ -330,5 +346,22 @@ static const struct TextColor sWhiteText =
 	.fgColor = TEXT_COLOR_WHITE,
 	.shadowColor = TEXT_COLOR_DARK_GRAY,
 }; 
+
+
+struct StartMenuOption 
+{
+  u8 id;
+  u8 * text;
+  u16 flag; 
+  u8 * script;
+  void (*func);
+};
+
+#define startmenu_option(a, b, c, d, e) \
+{.id = (u8) a,.text = (u8*) b,\
+.flag = (u16) c, .script = (u8*) d,\
+.func = (void*) e} 
+
+
 
 #endif // GUARD_START_MENU_H

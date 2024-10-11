@@ -12,3 +12,34 @@ SAVE
 
 #org @gText_StartMenu_Option
 OPTIONS
+
+#org @gText_StartMenu_Option2
+New Option
+
+#org @gText_Mon
+Mon.
+
+#org @gText_Tue
+Tue.
+
+#org @gText_Wed
+Wed.
+
+#org @gText_Thu
+Thu.
+
+#org @gText_Fri 
+Fri. 
+
+#org @gText_Sat
+Sat.
+
+#org @gText_Sun
+Sun.
+
+#org @gText_AM
+AM
+
+#org @gText_PM
+PM
+

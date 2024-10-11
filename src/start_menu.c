@@ -33,9 +33,13 @@
 #include "../include/new/Vanilla_functions.h"
 
 
-#define cpos sStartMenuPtr->cursorpos 
-#define numitems sStartMenuPtr->NumStartMenuItems 
-#define menuitems sStartMenuPtr->CurrentOptionsTable
+#define cpos sStartMenuPtr->cursorpos[0]
+#define scrolloffset sStartMenuPtr->cursorpos[1]
+#define numitems sStartMenuPtr->NumStartMenuItems[0]
+#define numonscreenitems sStartMenuPtr->NumStartMenuItems[1]
+#define menuitems sStartMenuPtr->CurrentOptionsTable[0] 
+#define onscreenmenuitems sStartMenuPtr->CurrentOptionsTable[1]
+
 
 
 enum WindowIds
@@ -49,13 +53,15 @@ enum WindowIds
 
 struct StartMenuResources
 {
-  u8 cursorpos;
+  u8 cursorpos[2];
   u8* sBgTilemapBuffer;
-  u8 NumStartMenuItems;
-  u8 CurrentOptionsTable[MAX_STARTMENU_ITEMS];
-};  
+  u8 NumStartMenuItems[2];
+  u8 CurrentOptionsTable[2][MAX_STARTMENU_ITEMS]; 
+  u8 IconSpriteIds[6];
+};   
 
-#define sStartMenuPtr (*((struct StartMenuResources**) 0x203E038)) 
+#define sStartMenuPtr (*((struct StartMenuResources**) 0x203E038))  
+
 extern u16 StdTextPal[];
 static const struct WindowTemplate sMenuWindowTemplates[] = 
 {
@@ -95,7 +101,9 @@ static const struct WindowTemplate sMenuWindowTemplates[] =
 
 
 //This file's functions
-void CB2_ReturnToFieldWithOpenMenu(void);
+void CB2_ReturnToFieldWithOpenMenu(void); 
+static void CB2_OptionMenuFromStartMenu(void); 
+static void CB2_PlayerTrainerCardFromStartMenu(void);
 static void ClearTasksAndGraphicalStructs(void); 
 static void ClearVramOamPlttRegs(void);
 static void VBlankCB_StartMenu(void); 
@@ -115,18 +123,22 @@ static void CleanWindows(void);
 static void CommitWindows(void); 
 static void PrintGUIMenuItemsName(void);
 static void DrawIcons(void);
-static void Task_FadeOutToBag(u8 taskId);
-static void Task_StartMenuFadeOutAndAskSaveGame(u8 taskId);
 void CB2_SaveFromStartMenu(void);
-void StartMenu_Init(void);
-static const u8 * const StartMenuTextTable[] = 
+void StartMenu_Init(void); 
+static void CalculateAndConfigureOnScreenOptions(void);
+static void Task_RunStartMenuOptionFuncOrScript(u8 taskId);
+static void RefreshStartMenuOptions(void);
+
+static const struct StartMenuOption sStartMenuOptionsTable[] = 
 {
-  [STARTMENU_POKEDEX] = gText_StartMenu_Pokedex,
-  [STARTMENU_POKEMON] = gText_StartMenu_Pokemon,
-  [STARTMENU_BAG] = gText_StartMenu_Bag,
-  [STARTMENU_SAVE] = gText_StartMenu_Save,
-  [STARTMENU_OPTION] = gText_StartMenu_Option,
-};
+  [STARTMENU_POKEDEX] = startmenu_option(STARTMENU_POKEDEX, gText_StartMenu_Pokedex, FLAG_SYS_POKEDEX_GET, NULL, CB2_OpenPokedexFromStartMenu),
+  [STARTMENU_POKEMON] = startmenu_option(STARTMENU_POKEMON, gText_StartMenu_Pokemon, FLAG_SYS_POKEMON_GET, NULL, CB2_PartyMenuFromStartMenu),
+  [STARTMENU_BAG]     = startmenu_option(STARTMENU_BAG, gText_StartMenu_Bag, 0, NULL, CB2_BagMenuFromStartMenu),
+  [STARTMENU_PLAYER]  = startmenu_option(STARTMENU_PLAYER, NULL , 0, NULL, CB2_PlayerTrainerCardFromStartMenu),
+  [STARTMENU_SAVE]    = startmenu_option(STARTMENU_SAVE, gText_StartMenu_Save, 0, Script_SaveGame, NULL),
+  [STARTMENU_OPTION]  = startmenu_option(STARTMENU_OPTION, gText_StartMenu_Option, 0, NULL, CB2_OptionMenuFromStartMenu),
+  [STARTMENU_OPTION2]  = startmenu_option(STARTMENU_OPTION2, gText_StartMenu_Option2, 0, NULL, CB2_OptionMenuFromStartMenu),
+}; 
 
 static void ClearTasksAndGraphicalStructs(void)
 {
@@ -171,6 +183,7 @@ static void MainCB2_StartMenu(void)
 	BuildOamBuffer();
 	UpdatePaletteFade();
 }
+
 void CB2_StartMenu(void)
 {
 	switch (gMain.state) {
@@ -273,39 +286,14 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   else if(JOY_NEW(A_BUTTON))
   {
     PlaySE(SE_SELECT);
-    VarSet(0x8000, cpos);
-      switch (menuitems[cpos])
-      {
-        case STARTMENU_POKEDEX:
-          SetMainCallback2(CB2_OpenPokedexFromStartMenu); 
-          FreeAndCloseStartMenu(taskId);
-          break;
-        case STARTMENU_POKEMON:
-          SetMainCallback2(CB2_PartyMenuFromStartMenu);
-          FreeAndCloseStartMenu(taskId);
-          break;
-        case STARTMENU_BAG:
-          BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
-          gTasks[taskId].func = Task_FadeOutToBag;
-          break;
-        case STARTMENU_PLAYER:
-          ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
-          FreeAndCloseStartMenu(taskId);
-          break;
-        case STARTMENU_OPTION: 
-          SetMainCallback2(CB2_OptionsMenuFromStartMenu);
-          gMain.savedCallback = CB2_ReturnToFieldWithOpenMenu;
-          FreeAndCloseStartMenu(taskId);
-          break;
-        case STARTMENU_SAVE:
-          BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
-          gTasks[taskId].func = Task_StartMenuFadeOutAndAskSaveGame;
-          break;
-      }
+    VarSet(0x8000, cpos);  
+    VarSet(0x8001, scrolloffset);
+    BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
+    gTasks[taskId].func = Task_RunStartMenuOptionFuncOrScript;
   }
   else if (JOY_NEW(DPAD_RIGHT)) 
   {
-    if (!(cpos+1>=numitems) && !(cpos%2==1))
+    if (!(cpos+1>= numonscreenitems) && !(cpos%2==1))
     {
       PlaySE(SE_SELECT);
       cpos++; 
@@ -321,7 +309,13 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   } 
   else if (JOY_NEW(DPAD_UP)) 
   {
-    if (cpos-2>=0)  
+    if (cpos>1 && cpos<4 && scrolloffset>0)
+    {
+      PlaySE(SE_SELECT);
+      scrolloffset -= 1; 
+      RefreshStartMenuOptions();
+    }
+    else if (cpos-2>=0)  
     {
       PlaySE(SE_SELECT);
       cpos -= 2; 
@@ -330,7 +324,13 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   } 
   else if (JOY_NEW(DPAD_DOWN)) 
   {
-    if (cpos+2<numitems)  
+    if (cpos>1 && cpos<4 && scrolloffset<numitems-6)
+    {
+      scrolloffset += 1; 
+      PlaySE(SE_SELECT);
+      RefreshStartMenuOptions();
+    }
+    else if (cpos+2<numonscreenitems)  
    {
       PlaySE(SE_SELECT);
       cpos += 2; 
@@ -338,22 +338,22 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   }
 } 
 
-static void Task_FadeOutToBag(u8 taskId)
+
+static void Task_RunStartMenuOptionFuncOrScript(u8 taskId)
 {
   if (!gPaletteFade.active)
-  {
-    SetMainCallback2(CB2_BagMenuFromStartMenu);
+  { 
+    if (sStartMenuOptionsTable[onscreenmenuitems[cpos]].func!=NULL) 
+      SetMainCallback2(sStartMenuOptionsTable[onscreenmenuitems[cpos]].func);
+    else
+    {
+      SetMainCallback2(CB2_ReturnToField);
+      ScriptContext1_SetupScript(sStartMenuOptionsTable[onscreenmenuitems[cpos]].script); 
+    }
     FreeAndCloseStartMenu(taskId);
   }
-}
-static void Task_StartMenuFadeOutAndAskSaveGame(u8 taskId)
-{
-  if (!gPaletteFade.active)
-	{
-		SetMainCallback2(CB2_SaveFromStartMenu);
-		FreeAndCloseStartMenu(taskId);
-	}
-}
+} 
+
 void StartMenu_Init(void)
 {
 	if (!gPaletteFade.active)
@@ -368,35 +368,28 @@ void StartMenu_Init(void)
 }
 
 static void SetUpStartMenu_NormalField(void) 
-{ 
-  u8 cursor = 0; 
-  if (FlagGet(FLAG_SYS_POKEDEX_GET) && FlagGet(FLAG_SYS_POKEMON_GET))
-  {
-    sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_POKEDEX;
-    cursor++;
-    sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_POKEMON;
-    cursor++;
-  } 
-  else if(FlagGet(FLAG_SYS_POKEMON_GET)) 
-  {
-    sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_POKEMON; 
-    cursor++;
-  }
-  else if(FlagGet(FLAG_SYS_POKEDEX_GET))
-  {
-    sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_POKEDEX;
+{
+  u8 cursor = 0;
+  for (u8 i = 0; i < MAX_STARTMENU_ITEMS; i++)
+  { 
+    if (sStartMenuOptionsTable[i].flag!=0 && !FlagGet(sStartMenuOptionsTable[i].flag)) 
+      continue;
+    menuitems[cursor] = sStartMenuOptionsTable[i].id;
     cursor++;
   } 
-  sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_BAG;cursor++;
-  sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_PLAYER; cursor++;
-  sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_SAVE; cursor++;
-  sStartMenuPtr->CurrentOptionsTable[cursor] = STARTMENU_OPTION; cursor++;
-  sStartMenuPtr->NumStartMenuItems = cursor; 
+  numitems = cursor; 
+  if (!scrolloffset)
+    scrolloffset = 0;
+  CalculateAndConfigureOnScreenOptions();
 }
 
 void PanelCallBack(struct Sprite *sprite) 
 { 
-  if(sprite->data[0] == sStartMenuPtr->cursorpos) 
+  if (sprite->data[0]>=numonscreenitems && sprite->data[0]!=0xFF)
+    sprite->invisible = 1;
+  else 
+    sprite->invisible = 0;
+  if(sprite->data[0] == cpos) 
     StartSpriteAnim(sprite, 1);
   else 
     StartSpriteAnim(sprite, 0);
@@ -404,7 +397,7 @@ void PanelCallBack(struct Sprite *sprite)
 
 void StartMenuIconCallback(struct Sprite *sprite) 
 { 
-  if(sprite->data[0] == sStartMenuPtr->cursorpos)
+  if(sprite->data[0] == cpos)
   {
     StartSpriteAnim(sprite, 1);
     if (sprite->data[4]%5==0)
@@ -429,17 +422,12 @@ static void DrawPanels(void)
 { 
   u16 x, y;
   u8 counter = 0; 
-  u8 numItems = sStartMenuPtr->NumStartMenuItems;
   LoadSpriteSheet(&PanelSpriteSheet);
   LoadSpritePalette(&PanelSpritePalette);
   for (u8 j = 0; j<3; j++) 
   {
-    if(counter==numItems)
-        break; 
     for (u8 i = 0; i<2; i++) 
     {
-      if(counter==numItems)
-        break; 
       x = PANEL_X + (HSPACING + 64/2 + 64)*i;
       y = (PANEL_Y + (VSPACING + 32)*j); 
       u8 SpriteId1 = CreateSprite(&sPanel1SpriteTemplate,x, y, 0);
@@ -463,25 +451,25 @@ static void DrawIcons(void)
   u8 counter = 0;
   for (u8 j = 0; j<3; j++) 
   {
-    if(counter==numitems)
+    if(counter==numonscreenitems)
         break; 
     for (u8 i = 0; i<2; i++) 
     {
-      if(counter==numitems)
+      if(counter==numonscreenitems)
         break; 
       x = (PANEL_X -11) + (HSPACING + 64/2 + 64)*i;
       y = (PANEL_Y-3)+ (VSPACING +32)*j; 
-      LoadSpriteSheet(&StartMenuIconTable[menuitems[counter]].spritesheet); 
-      LoadSpritePalette(&StartMenuIconTable[menuitems[counter]].spritepalette);
-      u8 SpriteId = CreateSprite(&StartMenuIconTable[menuitems[counter]].sprtemplate , x, y, 0);
+      LoadSpriteSheet(&StartMenuIconTable[onscreenmenuitems[counter]].spritesheet); 
+      LoadSpritePalette(&StartMenuIconTable[onscreenmenuitems[counter]].spritepalette);
+      u8 SpriteId = CreateSprite(&StartMenuIconTable[onscreenmenuitems[counter]].sprtemplate , x, y, 0);
       gSprites[SpriteId].data[0] = counter;
       gSprites[SpriteId].data[1] = 3;
       gSprites[SpriteId].data[2] = y;
       gSprites[SpriteId].data[3] = -1; 
+      sStartMenuPtr->IconSpriteIds[counter] = SpriteId;
       counter++; 
     }
   }
-  
 }
 
 
@@ -540,18 +528,18 @@ static void PrintGUIMenuItemsName(void)
   u8 counter = 0;
   for (u8 row = 0;row<3; row++)
   { 
-    if (counter==numitems) 
+    if (counter==numonscreenitems) 
       break;
     for (u8 column = 0; column<2; column++) 
     {
-      if (counter==numitems) 
+      if (counter==numonscreenitems) 
         break; 
       x = (PANEL_X + (HSPACING + 64/2 + 64)*column) + 8;
       y = (PANEL_Y + (VSPACING + 32)*row) - 40;
-      if (menuitems[counter]==STARTMENU_PLAYER)
+      if (onscreenmenuitems[counter]==STARTMENU_PLAYER)
         WindowPrint(WIN_ITEMS, 1, x, y, &sWhiteText, 0, gSaveBlock2Ptr->playerName); 
       else
-        WindowPrint(WIN_ITEMS, 1, x, y, &sWhiteText, 0, StartMenuTextTable[menuitems[counter]]); 
+        WindowPrint(WIN_ITEMS, 1, x, y, &sWhiteText, 0, sStartMenuOptionsTable[onscreenmenuitems[counter]].text); 
       counter++;
     }
   }
@@ -560,12 +548,44 @@ static void PrintGUIMenuItemsName(void)
 void CB2_ReturnToFieldWithOpenMenu(void)
 { 
   sStartMenuPtr = Calloc(sizeof(struct StartMenuResources));
-  cpos = VarGet(0x8000);
+  cpos = VarGet(0x8000); 
+  scrolloffset = VarGet(0x8001);
   SetMainCallback2(CB2_StartMenu);
 } 
 
-void CB2_SaveFromStartMenu(void)
+
+static void CalculateAndConfigureOnScreenOptions(void) 
 {
-  CB2_ReturnToField();
-  ScriptContext1_SetupScript(Script_SaveGame);
+  u8 counter = 0;
+  for (u8 i = 0; i<6; i++)
+  {
+    if (i+2*scrolloffset == numitems)
+      break;
+    onscreenmenuitems[i] = menuitems[i+scrolloffset*2];
+    counter++;
+  } 
+  numonscreenitems = counter;
 }
+
+static void CB2_PlayerTrainerCardFromStartMenu(void)
+{
+  ShowPlayerTrainerCard(CB2_ReturnToFieldWithOpenMenu);
+}
+
+static void CB2_OptionMenuFromStartMenu(void)
+{
+  SetMainCallback2(CB2_OptionsMenuFromStartMenu); 
+  gMain.savedCallback = CB2_ReturnToFieldWithOpenMenu;
+}
+
+
+static void RefreshStartMenuOptions(void) 
+{
+  CleanWindow(WIN_ITEMS);
+  for (u8 i=0; i<numonscreenitems; i++) 
+    DestroySpriteAndFreeResources(&gSprites[sStartMenuPtr->IconSpriteIds[i]]);
+  CalculateAndConfigureOnScreenOptions();
+  DrawIcons();
+  PrintGUIMenuItemsName();
+  CommitWindow(WIN_ITEMS);
+} 
