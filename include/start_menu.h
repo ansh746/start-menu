@@ -8,9 +8,9 @@
 #include "text.h"
 
 #define PANEL_X 35
-#define PANEL_Y 42 
-#define HSPACING 21
-#define VSPACING 5 
+#define PANEL_Y 41 
+#define HSPACING 20
+#define VSPACING 6
 
 
 #define icon_template(gfxtag) {.tileTag = (u16) gfxtag, .paletteTag = (u16) gfxtag, .oam = &sIconOamData, .anims = sAnimCmdTable_Icon, .images = NULL,.affineAnims = gDummySpriteAffineAnimTable, .callback = StartMenuIconCallback}
@@ -32,6 +32,7 @@ enum
   GFXTAG_PLAYER,
   GFXTAG_SAVE,
   GFXTAG_OPTIONS,
+  GFXTAG_SCROLLBAR,
 };
 
 enum 
@@ -42,7 +43,6 @@ enum
   STARTMENU_PLAYER, 
   STARTMENU_SAVE,
   STARTMENU_OPTION,
-  STARTMENU_OPTION2,
   MAX_STARTMENU_ITEMS
 } ;
 
@@ -57,6 +57,7 @@ struct StartMenuIcon
 extern void Field_AskSaveTheGame(void);
 void PanelCallBack(struct Sprite *sprite);
 void StartMenuIconCallback(struct Sprite *sprite);
+void ScrollBarCallback(struct Sprite *sprite);
 u8* __attribute__((long_call)) GetMapName(u8* dest, u16 regionMapId, u16 padLength);
 u8 __attribute__((long_call)) GetCurrentRegionMapSectionId(void);
 s16 __attribute__((long_call)) Sin2(u16 angle); 
@@ -90,7 +91,8 @@ extern const u8 saveTiles[];
 extern const u16 savePal[];
 extern const u8 optionsTiles[];
 extern const u16 optionsPal[];
-
+extern const u8 scrollbarTiles[];
+extern const u16 scrollbarPal[];
 extern const u8 StartMenuBgTiles[]; 
 extern const u8 StartMenuBgMap[];
 extern const u16 StartMenuBgPal[];
@@ -292,6 +294,28 @@ static const union AnimCmd *const sAnimCmdTable_Icon[] =
 	sAnimCmdIconSelected
 };   
 
+static const struct SpriteSheet ScrollBarSpriteSheet = {scrollbarTiles, 32*16, GFXTAG_SCROLLBAR};
+static const struct SpritePalette ScrollBarSpritePalette = {scrollbarPal, GFXTAG_SCROLLBAR};
+
+static const union AnimCmd AnimCmdScrollbar[] = 
+{
+  ANIMCMD_FRAME(0, 0),
+  ANIMCMD_END,
+}; 
+static const union AnimCmd *const sAnimCmdTable_Scrollbar[] =
+{
+	AnimCmdScrollbar
+};   
+static const struct SpriteTemplate ScrollBarSpriteTemplate =
+{
+  .tileTag = GFXTAG_SCROLLBAR,
+	.paletteTag = GFXTAG_SCROLLBAR,
+	.oam = &sIconOamData,
+	.anims = sAnimCmdTable_Scrollbar,
+	.images = NULL,
+	.affineAnims = gDummySpriteAffineAnimTable,
+	.callback = ScrollBarCallback,
+};
 
 static struct StartMenuIcon StartMenuIconTable[] = 
 {
@@ -326,12 +350,6 @@ static struct StartMenuIcon StartMenuIconTable[] =
     .sprtemplate = icon_template(GFXTAG_SAVE)
   },
   [STARTMENU_OPTION] =
-  {
-    .spritesheet = {optionsTiles, 32*32, GFXTAG_OPTIONS},
-    .spritepalette = {optionsPal, GFXTAG_OPTIONS},
-    .sprtemplate = icon_template(GFXTAG_OPTIONS)
-  },
-  [STARTMENU_OPTION2] =
   {
     .spritesheet = {optionsTiles, 32*32, GFXTAG_OPTIONS},
     .spritepalette = {optionsPal, GFXTAG_OPTIONS},

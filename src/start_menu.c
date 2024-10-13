@@ -125,6 +125,7 @@ static void PrintGUIMenuItemsName(void);
 static void DrawIcons(void);
 void CB2_SaveFromStartMenu(void);
 void StartMenu_Init(void); 
+static void CreateScrollbar(void) ;
 static void CalculateAndConfigureOnScreenOptions(void);
 static void Task_RunStartMenuOptionFuncOrScript(u8 taskId);
 static void RefreshStartMenuOptions(void);
@@ -137,7 +138,6 @@ static const struct StartMenuOption sStartMenuOptionsTable[] =
   [STARTMENU_PLAYER]  = startmenu_option(STARTMENU_PLAYER, NULL , 0, NULL, CB2_PlayerTrainerCardFromStartMenu),
   [STARTMENU_SAVE]    = startmenu_option(STARTMENU_SAVE, gText_StartMenu_Save, 0, Script_SaveGame, NULL),
   [STARTMENU_OPTION]  = startmenu_option(STARTMENU_OPTION, gText_StartMenu_Option, 0, NULL, CB2_OptionMenuFromStartMenu),
-  [STARTMENU_OPTION2]  = startmenu_option(STARTMENU_OPTION2, gText_StartMenu_Option2, 0, NULL, CB2_OptionMenuFromStartMenu),
 }; 
 
 static void ClearTasksAndGraphicalStructs(void)
@@ -270,6 +270,7 @@ static bool8 InitStartMenuGUI(void)
   DrawIcons();
   PrintGUIMapName(); 
   PrintGUIMenuItemsName();
+  CreateScrollbar();
   CommitWindows();
   return TRUE;
 }
@@ -324,7 +325,7 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   } 
   else if (JOY_NEW(DPAD_DOWN)) 
   {
-    if (cpos>1 && cpos<4 && scrolloffset<numitems-6)
+    if (cpos>1 && cpos<4 && scrolloffset<numitems/2-3+numitems%2)
     {
       scrolloffset += 1; 
       PlaySE(SE_SELECT);
@@ -428,7 +429,7 @@ static void DrawPanels(void)
   {
     for (u8 i = 0; i<2; i++) 
     {
-      x = PANEL_X + (HSPACING + 64/2 + 64)*i;
+      x = PANEL_X + (HSPACING + 64/2 + 62)*i;
       y = (PANEL_Y + (VSPACING + 32)*j); 
       u8 SpriteId1 = CreateSprite(&sPanel1SpriteTemplate,x, y, 0);
       u8 SpriteId2 = CreateSprite(&sPanel2SpriteTemplate,x+64, y, 0); 
@@ -457,7 +458,7 @@ static void DrawIcons(void)
     {
       if(counter==numonscreenitems)
         break; 
-      x = (PANEL_X -11) + (HSPACING + 64/2 + 64)*i;
+      x = (PANEL_X -11) + (HSPACING-2+ 64/2 + 64)*i;
       y = (PANEL_Y-3)+ (VSPACING +32)*j; 
       LoadSpriteSheet(&StartMenuIconTable[onscreenmenuitems[counter]].spritesheet); 
       LoadSpritePalette(&StartMenuIconTable[onscreenmenuitems[counter]].spritepalette);
@@ -589,3 +590,26 @@ static void RefreshStartMenuOptions(void)
   PrintGUIMenuItemsName();
   CommitWindow(WIN_ITEMS);
 } 
+static void CreateScrollbar(void) 
+{
+  LoadSpriteSheet(&ScrollBarSpriteSheet);
+  LoadSpritePalette(&ScrollBarSpritePalette); 
+  CreateSprite(&ScrollBarSpriteTemplate, 240-4, 48, 0);
+
+}
+
+void ScrollBarCallback(struct Sprite *sprite) 
+{
+  u8 errorCorrection;
+  if (scrolloffset==(numitems/2-3+numitems%2))
+    errorCorrection = 62 - (62/(numitems/2-3+numitems%2))*(numitems/2-3+numitems%2);
+  else 
+    errorCorrection = 0;
+  if (numitems/2-3+numitems%2<= 0) 
+    sprite->invisible = TRUE;
+  else
+    sprite->pos1.y = 48 + 62/(numitems/2-3+numitems%2)*scrolloffset + errorCorrection;
+}
+
+ 
+
