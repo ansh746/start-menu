@@ -1,5 +1,4 @@
 # 👀 What is this? 
-___
 A custom start menu for Fire Red.
 
 ## ✨ Features
@@ -7,7 +6,6 @@ A custom start menu for Fire Red.
 - Configurable to add more than 6 default options.
 
 # ❓ How to use?
-___
 Same as CFRU, `python 3.6+` and `devkitARM` are required to compile.<br>
 
 ### 💾  Adding your rom  
@@ -36,4 +34,4 @@ Naturally, test it in an emulator.
 
 ### ➕ Adding New Options To Start Menu
 
-....
+
