@@ -1907,4 +1907,6 @@ CB2_PartyMenuFromStartMenu = 0x8126eb0 | 1;
 ShowPlayerTrainerCard = 0x808b698 | 1;
 CB2_OptionsMenuFromStartMenu = 0x8088388 | 1;
 Field_AskSaveTheGame = 0x806f67c | 1; 
-StdTextPal = 0x841f408;
+StdTextPal = 0x841f408; 
+
+gClock = 0x300553C;

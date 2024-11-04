@@ -44,11 +44,15 @@
 
 enum WindowIds
 {
+    WIN_TOPBAR_TIME,
     WIN_TOPBAR,
     WIN_ITEMS,
     WIN_BOTTOMBAR,
     WIN_COUNT
-};  
+};   
+
+
+
 
 
 struct StartMenuResources
@@ -65,16 +69,26 @@ struct StartMenuResources
 extern u16 StdTextPal[];
 static const struct WindowTemplate sMenuWindowTemplates[] = 
 {
-    [WIN_TOPBAR] = 
+    [WIN_TOPBAR_TIME] = 
     {
         .bg = BG_TEXT,      // which bg to print text on
         .tilemapLeft = 0,   // position from left (per 8 pixels)
         .tilemapTop = 0,    // position from top (per 8 pixels)
-        .width = 30,        // width (per 8 pixels)
+        .width = 10,        // width (per 8 pixels)
         .height = 4,        // height (per 8 pixels)
         .paletteNum = 14,   // palette index to use for text
         .baseBlock = 1,     // tile start in VRAM
     }, 
+    [WIN_TOPBAR] = 
+    {
+        .bg = BG_TEXT,      // which bg to print text on
+        .tilemapLeft = 10,   // position from left (per 8 pixels)
+        .tilemapTop = 0,    // position from top (per 8 pixels)
+        .width = 20,        // width (per 8 pixels)
+        .height = 4,        // height (per 8 pixels)
+        .paletteNum = 14,   // palette index to use for text
+        .baseBlock = 42,     // tile start in VRAM
+    },                
     [WIN_ITEMS] = 
     {
         .bg = BG_TEXT,      // which bg to print text on
@@ -83,7 +97,7 @@ static const struct WindowTemplate sMenuWindowTemplates[] =
         .width = 30,        // width (per 8 pixels)
         .height = 12,        // height (per 8 pixels)
         .paletteNum = 14,   // palette index to use for text
-        .baseBlock = 121,     // tile start in VRAM
+        .baseBlock = 123,     // tile start in VRAM
     },            
     [WIN_BOTTOMBAR] = 
     {
@@ -93,7 +107,7 @@ static const struct WindowTemplate sMenuWindowTemplates[] =
         .width = 30,        // width (per 8 pixels)
         .height = 4,        // height (per 8 pixels)
         .paletteNum = 14,   // palette index to use for text
-        .baseBlock = 482,     // tile start in VRAM
+        .baseBlock = 484,     // tile start in VRAM
     }, 
     DUMMY_WIN_TEMPLATE,
 }; 
@@ -129,6 +143,7 @@ static void CreateScrollbar(void) ;
 static void CalculateAndConfigureOnScreenOptions(void);
 static void Task_RunStartMenuOptionFuncOrScript(u8 taskId);
 static void RefreshStartMenuOptions(void);
+static void PrintAndUpdateTimeText();
 
 static const struct StartMenuOption sStartMenuOptionsTable[] = 
 {
@@ -138,7 +153,7 @@ static const struct StartMenuOption sStartMenuOptionsTable[] =
   [STARTMENU_PLAYER]  = startmenu_option(STARTMENU_PLAYER, NULL , 0, NULL, CB2_PlayerTrainerCardFromStartMenu),
   [STARTMENU_SAVE]    = startmenu_option(STARTMENU_SAVE, gText_StartMenu_Save, 0, Script_SaveGame, NULL),
   [STARTMENU_OPTION]  = startmenu_option(STARTMENU_OPTION, gText_StartMenu_Option, 0, NULL, CB2_OptionMenuFromStartMenu),
-}; 
+ }; 
 
 static void ClearTasksAndGraphicalStructs(void)
 {
@@ -154,20 +169,27 @@ static void ClearVramOamPlttRegs(void)
 {
 	DmaFill16(3, 0, VRAM, VRAM_SIZE);
 	DmaFill32(3, 0, OAM, OAM_SIZE);
-	DmaFill16(3, 0, PLTT, PLTT_SIZE);
-	SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_OBJ_ON | DISPCNT_OBJ_1D_MAP);
-	SetGpuReg(REG_OFFSET_BG3CNT, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG2CNT, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG1CNT, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG0CNT, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG3HOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG3VOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG2HOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG2VOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG1HOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG1VOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG0HOFS, DISPCNT_MODE_0);
-	SetGpuReg(REG_OFFSET_BG0VOFS, DISPCNT_MODE_0);
+	DmaFill16(3, 0, PLTT, PLTT_SIZE);SetGpuReg(REG_OFFSET_DISPCNT,  0);
+    SetGpuReg(REG_OFFSET_BG0CNT,   0);
+    SetGpuReg(REG_OFFSET_BG0HOFS,  0);
+    SetGpuReg(REG_OFFSET_BG0VOFS,  0);
+    SetGpuReg(REG_OFFSET_BG1CNT,   0);
+    SetGpuReg(REG_OFFSET_BG1HOFS,  0);
+    SetGpuReg(REG_OFFSET_BG1VOFS,  0);
+    SetGpuReg(REG_OFFSET_BG2CNT,   0);
+    SetGpuReg(REG_OFFSET_BG2HOFS,  0);
+    SetGpuReg(REG_OFFSET_BG2VOFS,  0);
+    SetGpuReg(REG_OFFSET_BG3CNT,   0);
+    SetGpuReg(REG_OFFSET_BG3HOFS,  0);
+    SetGpuReg(REG_OFFSET_BG3VOFS,  0);
+    SetGpuReg(REG_OFFSET_WIN0H,    0);
+    SetGpuReg(REG_OFFSET_WIN0V,    0);
+    SetGpuReg(REG_OFFSET_WININ,    0);
+    SetGpuReg(REG_OFFSET_WINOUT,   0);
+    SetGpuReg(REG_OFFSET_BLDCNT,   0);
+    SetGpuReg(REG_OFFSET_BLDALPHA, 0);
+    SetGpuReg(REG_OFFSET_BLDY,     0);
+	
 }
 
 static void VBlankCB_StartMenu(void)
@@ -179,7 +201,7 @@ static void VBlankCB_StartMenu(void)
 static void MainCB2_StartMenu(void)
 {
 	RunTasks();
-	AnimateSprites();
+  AnimateSprites();
 	BuildOamBuffer();
 	UpdatePaletteFade();
 }
@@ -192,17 +214,18 @@ void CB2_StartMenu(void)
 			SetBGMVolume_SuppressHelpSystemReduction(160);
 			SetVBlankCallback(NULL);
 			ClearVramOamPlttRegs();
+			SetGpuReg(REG_OFFSET_DISPCNT, DISPCNT_MODE_0 | DISPCNT_OBJ_1D_MAP | DISPCNT_BG_ALL_ON | DISPCNT_OBJ_ON);
 			gMain.state++;
 			break;
 		case 1:
 			ClearTasksAndGraphicalStructs();
 			gMain.state++;
 			break;
-		case 2:
-			sStartMenuPtr->sBgTilemapBuffer = Malloc(0x1000);
+		case 2: 
+		  sStartMenuPtr->sBgTilemapBuffer = Malloc(0x1000);
 			ResetBgsAndClearDma3BusyFlags(0);
 			InitBgsFromTemplates(0, sStartMenuBgTemplates, NELEMS(sStartMenuBgTemplates));
-			SetBgTilemapBuffer(BG_BACKGROUND, sStartMenuPtr->sBgTilemapBuffer);
+ 			SetBgTilemapBuffer(BG_BACKGROUND, sStartMenuPtr->sBgTilemapBuffer);
 			gMain.state++;
 			break;
 		case 3: 
@@ -240,7 +263,18 @@ void CB2_StartMenu(void)
 			break;
 	}
 } 
+static void Task_exittest(u8 taskId);
 
+static void Task_exittest(u8 taskId) 
+{ 
+  LoadSpritePalette(&ExitSpritePalette);
+  LoadSpriteSheet(&ExitSpriteSheet);
+  u8 h = CreateSpriteAndAnimate(&ExitSpriteTemplate, 240/2, 80,0);
+  gSprites[h].pos2.x = 0;
+  gSprites[h].pos2.y = 0;
+  DestroyTask(taskId);
+  
+}
 static void Task_StartMenuFadeIn(u8 taskId)
 {
 	if (!gPaletteFade.active)
@@ -270,6 +304,7 @@ static bool8 InitStartMenuGUI(void)
   DrawIcons();
   PrintGUIMapName(); 
   PrintGUIMenuItemsName();
+  PrintAndUpdateTimeText();
   CreateScrollbar();
   CommitWindows();
   return TRUE;
@@ -277,6 +312,14 @@ static bool8 InitStartMenuGUI(void)
 static void Task_StartMenuWaitForKeyPress(u8 taskId)
 { 
   // Handles Input
+  if (gClock.second==0)
+  {
+    CleanWindow(WIN_TOPBAR_TIME);
+    PrintAndUpdateTimeText();
+    CommitWindow(WIN_TOPBAR_TIME);
+  }
+  if (JOY_NEW(R_BUTTON)) 
+    CreateTask(Task_exittest, 0);
   if (JOY_NEW(B_BUTTON)) 
   { 
     cpos = 0xFF;
@@ -287,7 +330,7 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
   else if(JOY_NEW(A_BUTTON))
   {
     PlaySE(SE_SELECT);
-    VarSet(0x8000, cpos);  
+    VarSet(0x8000, cpos);
     VarSet(0x8001, scrolloffset);
     BeginNormalPaletteFade(0xFFFFFFFF, 0, 0, 16, RGB_BLACK);
     gTasks[taskId].func = Task_RunStartMenuOptionFuncOrScript;
@@ -385,15 +428,15 @@ static void SetUpStartMenu_NormalField(void)
 }
 
 void PanelCallBack(struct Sprite *sprite) 
-{ 
+{
   if (sprite->data[0]>=numonscreenitems && sprite->data[0]!=0xFF)
     sprite->invisible = 1;
   else 
     sprite->invisible = 0;
   if(sprite->data[0] == cpos) 
-    StartSpriteAnim(sprite, 1);
+    StartSpriteAnimIfDifferent(sprite, 1);
   else 
-    StartSpriteAnim(sprite, 0);
+    StartSpriteAnimIfDifferent(sprite, 0);
 }
 
 void StartMenuIconCallback(struct Sprite *sprite) 
@@ -518,7 +561,7 @@ static void CommitWindows(void)
 static void PrintGUIMapName(void)
 { 
   	GetMapName(gStringVar4, GetCurrentRegionMapSectionId(), 0); 
-  	WindowPrint(WIN_TOPBAR, 1, 0, 0, &sWhiteText, 0, gStringVar4); 
+  	WindowPrint(WIN_BOTTOMBAR, 0, 2, 10, &sWhiteText, 0, gStringVar4); 
 }
 
 static void PrintGUIMenuItemsName(void) 
@@ -594,7 +637,7 @@ static void CreateScrollbar(void)
 {
   LoadSpriteSheet(&ScrollBarSpriteSheet);
   LoadSpritePalette(&ScrollBarSpritePalette); 
-  CreateSprite(&ScrollBarSpriteTemplate, 240-4, 48, 0);
+  CreateSprite(&ScrollBarSpriteTemplate, 240-5, 48, 0);
 
 }
 
@@ -607,9 +650,31 @@ void ScrollBarCallback(struct Sprite *sprite)
     errorCorrection = 0;
   if (numitems/2-3+numitems%2<= 0) 
     sprite->invisible = TRUE;
-  else
-    sprite->pos1.y = 48 + 62/(numitems/2-3+numitems%2)*scrolloffset + errorCorrection;
-}
+  else if(48 + 62/(numitems/2-3+numitems%2)*scrolloffset+errorCorrection != sprite->pos1.y)
+    sprite->pos1.y = 48 + 62/(numitems/2-3+numitems%2)*scrolloffset+errorCorrection; 
+  }
 
  
 
+const u8 * sDayNames[] =
+{
+  gText_Sun,
+  gText_Mon,
+  gText_Tue,
+  gText_Wed,
+  gText_Thu,
+  gText_Fri,
+  gText_Sat,
+};
+extern u8 gText_StartMenu_TimeBase_12Hr[];
+static void PrintAndUpdateTimeText()
+{
+	const u8* amPMString = (gClock.hour >= 12) ? gText_PM : gText_AM;
+	ConvertIntToDecimalStringN(gStringVar1, (gClock.hour == 0) ? 12 : (gClock.hour > 12) ? gClock.hour - 12 : gClock.hour, STR_CONV_MODE_RIGHT_ALIGN, 2); //Hour - 12hr format
+	ConvertIntToDecimalStringN(gStringVar2, gClock.minute, STR_CONV_MODE_LEADING_ZEROS, 2); //Minute
+	StringCopy(gStringVar3, sDayNames[gClock.dayOfWeek]); //Day of Week
+	StringExpandPlaceholders(gStringVar4, gText_StartMenu_TimeBase_12Hr);
+//	AddTextPrinterParameterized(sTimeWindowId, 2, gStringVar4, 4, 3, 0xFF, NULL);
+  WindowPrint(WIN_TOPBAR_TIME, 0, 3, 0, &sWhiteText, 0 ,gStringVar4);
+  WindowPrint(WIN_TOPBAR_TIME, 0, 63, 0, &sWhiteText, 0 ,amPMString);
+}

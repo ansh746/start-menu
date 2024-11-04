@@ -7,7 +7,7 @@
 #include "window.h" 
 #include "text.h"
 
-#define PANEL_X 35
+#define PANEL_X 34
 #define PANEL_Y 41 
 #define HSPACING 20
 #define VSPACING 6
@@ -44,7 +44,7 @@ enum
   STARTMENU_SAVE,
   STARTMENU_OPTION,
   MAX_STARTMENU_ITEMS
-} ;
+};
 
 struct StartMenuIcon
 {
@@ -165,7 +165,7 @@ static const struct SpritePalette PanelSpritePalette = {panelPal, GFXTAG_PANEL};
 static const struct OamData sPanelOam =
 {
 	.affineMode = ST_OAM_AFFINE_OFF,
-	.objMode = ST_OAM_OBJ_NORMAL,
+	.objMode = ST_OAM_OBJ_BLEND,
 	.shape = SPRITE_SHAPE(64x64),
 	.size = SPRITE_SIZE(64x64),
 	.priority = 1, //Above other sprites
@@ -191,19 +191,22 @@ static const union AnimCmd sAnimCmdPanelSelected1[] =
 static const union AnimCmd sAnimCmdPanelSelected2[] =
 {
 	ANIMCMD_FRAME(192, 0),       
-	ANIMCMD_END
+	ANIMCMD_JUMP(0) 
 };  
+
 
 static const union AnimCmd *const sAnimCmdTable_Panel1[] =
 {
 	sAnimCmdPanelUnselected1,
-	sAnimCmdPanelSelected1
+	sAnimCmdPanelSelected1,
+	
 }; 
 
 static const union AnimCmd *const sAnimCmdTable_Panel2[] =
 {
 	sAnimCmdPanelUnselected2,
-	sAnimCmdPanelSelected2
+	sAnimCmdPanelSelected2,
+	
 };  
 
 static const struct SpriteTemplate sPanel1SpriteTemplate =
@@ -256,6 +259,7 @@ static const union AnimCmd *const sAnimCmdTable_Exit[] =
 	sAnimCmdExitSelected
 };   
 
+
 static const struct SpriteTemplate ExitSpriteTemplate =
 {
 	.tileTag = GFXTAG_EXIT,
@@ -270,6 +274,14 @@ static const struct SpriteTemplate ExitSpriteTemplate =
 // Pokedex Sprite
 
 static const struct OamData sIconOamData =
+{
+	.affineMode = ST_OAM_AFFINE_OFF,
+	.objMode = ST_OAM_OBJ_NORMAL,
+	.shape = SPRITE_SHAPE(32x32),
+	.size = SPRITE_SIZE(32x32),
+	.priority = 1, //Above other sprites
+};
+static const struct OamData ScrollBarOamData =
 {
 	.affineMode = ST_OAM_AFFINE_OFF,
 	.objMode = ST_OAM_OBJ_NORMAL,
@@ -306,11 +318,13 @@ static const union AnimCmd *const sAnimCmdTable_Scrollbar[] =
 {
 	AnimCmdScrollbar
 };   
+
+
 static const struct SpriteTemplate ScrollBarSpriteTemplate =
 {
   .tileTag = GFXTAG_SCROLLBAR,
 	.paletteTag = GFXTAG_SCROLLBAR,
-	.oam = &sIconOamData,
+	.oam = &ScrollBarOamData,
 	.anims = sAnimCmdTable_Scrollbar,
 	.images = NULL,
 	.affineAnims = gDummySpriteAffineAnimTable,
@@ -364,6 +378,7 @@ static const struct TextColor sWhiteText =
 	.fgColor = TEXT_COLOR_WHITE,
 	.shadowColor = TEXT_COLOR_DARK_GRAY,
 }; 
+
 
 
 struct StartMenuOption 

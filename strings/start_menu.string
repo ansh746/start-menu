@@ -17,25 +17,25 @@ OPTIONS
 New Option
 
 #org @gText_Mon
-Mon.
+MON.
 
 #org @gText_Tue
-Tue.
+TUE.
 
 #org @gText_Wed
-Wed.
+WED.
 
 #org @gText_Thu
-Thu.
+THU.
 
 #org @gText_Fri 
-Fri. 
+FRI. 
 
 #org @gText_Sat
-Sat.
+SAT.
 
 #org @gText_Sun
-Sun.
+SUN.
 
 #org @gText_AM
 AM
@@ -43,3 +43,5 @@ AM
 #org @gText_PM
 PM
 
+#org @gText_StartMenu_TimeBase_12Hr
+[BUFFER3] [BUFFER1]:[BUFFER2] 
