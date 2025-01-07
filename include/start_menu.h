@@ -390,11 +390,6 @@ struct StartMenuOption
   void (*func);
 };
 
-#define startmenu_option(a, b, c, d, e) \
-{.id = (u8) a,.text = (u8*) b,\
-.flag = (u16) c, .script = (u8*) d,\
-.func = (void*) e} 
-
 
 
 #endif // GUARD_START_MENU_H

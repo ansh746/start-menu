@@ -147,12 +147,48 @@ static void PrintAndUpdateTimeText();
 
 static const struct StartMenuOption sStartMenuOptionsTable[] = 
 {
-  [STARTMENU_POKEDEX] = startmenu_option(STARTMENU_POKEDEX, gText_StartMenu_Pokedex, FLAG_SYS_POKEDEX_GET, NULL, CB2_OpenPokedexFromStartMenu),
-  [STARTMENU_POKEMON] = startmenu_option(STARTMENU_POKEMON, gText_StartMenu_Pokemon, FLAG_SYS_POKEMON_GET, NULL, CB2_PartyMenuFromStartMenu),
-  [STARTMENU_BAG]     = startmenu_option(STARTMENU_BAG, gText_StartMenu_Bag, 0, NULL, CB2_BagMenuFromStartMenu),
-  [STARTMENU_PLAYER]  = startmenu_option(STARTMENU_PLAYER, NULL , 0, NULL, CB2_PlayerTrainerCardFromStartMenu),
-  [STARTMENU_SAVE]    = startmenu_option(STARTMENU_SAVE, gText_StartMenu_Save, 0, Script_SaveGame, NULL),
-  [STARTMENU_OPTION]  = startmenu_option(STARTMENU_OPTION, gText_StartMenu_Option, 0, NULL, CB2_OptionMenuFromStartMenu),
+  [STARTMENU_POKEDEX] =
+  {
+    .id =  STARTMENU_POKEDEX,
+    .text = gText_StartMenu_Pokedex,
+    .flag = FLAG_SYS_POKEDEX_GET,
+    .script = NULL,
+    .func = CB2_OpenPokedexFromStartMenu
+  },
+  [STARTMENU_POKEMON] = {
+    .id =  STARTMENU_POKEMON,
+    .text =  gText_StartMenu_Pokemon,
+    .flag =  FLAG_SYS_POKEMON_GET,
+    .script =  NULL,
+    .func = CB2_PartyMenuFromStartMenu
+  },
+  [STARTMENU_BAG]     = {
+    .id =  STARTMENU_BAG,
+    .text = (u8*) gText_StartMenu_Bag,
+    .flag = (u16) 0, 
+    .script = (u8*) NULL,
+    .func = (void*) CB2_BagMenuFromStartMenu
+  },
+  [STARTMENU_PLAYER]  = {
+    .id =  STARTMENU_PLAYER, 
+    .text = (u8*) NULL,
+    .flag = (u16) 0, 
+    .script = (u8*) NULL,
+    .func = (void*) CB2_PlayerTrainerCardFromStartMenu
+  },
+  [STARTMENU_SAVE]    = {
+    .id =  STARTMENU_SAVE, 
+    .text = (u8*) gText_StartMenu_Save,.flag = (u16) 0, 
+    .script = (u8*) Script_SaveGame,
+    .func = (void*) NULL
+  },
+  [STARTMENU_OPTION]  = {
+    .id =  STARTMENU_OPTION, 
+    .text = gText_StartMenu_Option,
+    .flag = 0, 
+    .script = NULL,
+    .func = CB2_OptionMenuFromStartMenu
+  },
  }; 
 
 static void ClearTasksAndGraphicalStructs(void)
@@ -263,18 +299,7 @@ void CB2_StartMenu(void)
 			break;
 	}
 } 
-static void Task_exittest(u8 taskId);
 
-static void Task_exittest(u8 taskId) 
-{ 
-  LoadSpritePalette(&ExitSpritePalette);
-  LoadSpriteSheet(&ExitSpriteSheet);
-  u8 h = CreateSpriteAndAnimate(&ExitSpriteTemplate, 240/2, 80,0);
-  gSprites[h].pos2.x = 0;
-  gSprites[h].pos2.y = 0;
-  DestroyTask(taskId);
-  
-}
 static void Task_StartMenuFadeIn(u8 taskId)
 {
 	if (!gPaletteFade.active)
@@ -318,8 +343,6 @@ static void Task_StartMenuWaitForKeyPress(u8 taskId)
     PrintAndUpdateTimeText();
     CommitWindow(WIN_TOPBAR_TIME);
   }
-  if (JOY_NEW(R_BUTTON)) 
-    CreateTask(Task_exittest, 0);
   if (JOY_NEW(B_BUTTON)) 
   { 
     cpos = 0xFF;
