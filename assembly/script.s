@@ -8,7 +8,15 @@
 .global Script_SaveGame
 
 Script_SaveGame:
-  pause 0x4
+  pause 0x20
   special 0x5D
-  waitkeypress
-  end
+  waitstate 
+  compare 0x800D 0x1
+  if 0x0 _goto Script_CallStartMenu
+  closemessage
+  end 
+
+.global Script_CallStartMenu
+Script_CallStartMenu:
+  callasm StartMenu_Init +1
+  end 
