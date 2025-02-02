@@ -1067,6 +1067,7 @@ ScriptContext2_IsEnabled = 0x8069958 | 1;
 SetTextboxSignpostDesign = 0x8069A20 | 1;
 ScriptContext1_SetupScript = 0x8069AE4 | 1;
 ScriptContext1_Stop = 0x8069B28 | 1;
+ScriptContext1_Init = 0x8069a80 | 1;
 GetVarPointer = 0x806E454 | 1;
 VarGet = 0x806E568 | 1;
 VarSet = 0x806E584 | 1;
@@ -1908,5 +1909,7 @@ ShowPlayerTrainerCard = 0x808b698 | 1;
 CB2_OptionsMenuFromStartMenu = 0x8088388 | 1;
 Field_AskSaveTheGame = 0x806f67c | 1; 
 StdTextPal = 0x841f408; 
+gNumSafariBalls = 0x2039994;
+gSafariZoneStepCounter = 0x2039996;
 
 gClock = 0x300553C;
