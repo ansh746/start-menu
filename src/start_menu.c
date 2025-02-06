@@ -40,7 +40,8 @@
 #define menuitems sStartMenuPtr->CurrentOptionsTable[0] 
 #define onscreenmenuitems sStartMenuPtr->CurrentOptionsTable[1]
 
-
+extern u8 gNumSafariBalls;
+extern u16 gSafariZoneStepCounter;
 
 enum WindowIds
 {
@@ -144,50 +145,59 @@ static void CalculateAndConfigureOnScreenOptions(void);
 static void Task_RunStartMenuOptionFuncOrScript(u8 taskId);
 static void RefreshStartMenuOptions(void);
 static void PrintAndUpdateTimeText();
+static void SetupSafariZoneStatsText(void) ;
 
 static const struct StartMenuOption sStartMenuOptionsTable[] = 
 {
   [STARTMENU_POKEDEX] =
   {
     .id =  STARTMENU_POKEDEX,
-    .text = gText_StartMenu_Pokedex,
+    .text = (u8*) gText_StartMenu_Pokedex,
     .flag = FLAG_SYS_POKEDEX_GET,
     .script = NULL,
     .func = CB2_OpenPokedexFromStartMenu
   },
   [STARTMENU_POKEMON] = {
     .id =  STARTMENU_POKEMON,
-    .text =  gText_StartMenu_Pokemon,
+    .text =  (u8*) gText_StartMenu_Pokemon,
     .flag =  FLAG_SYS_POKEMON_GET,
     .script =  NULL,
     .func = CB2_PartyMenuFromStartMenu
   },
   [STARTMENU_BAG]     = {
     .id =  STARTMENU_BAG,
-    .text = (u8*) gText_StartMenu_Bag,
-    .flag = (u16) 0, 
-    .script = (u8*) NULL,
-    .func = (void*) CB2_BagMenuFromStartMenu
+    .text =  (u8*) gText_StartMenu_Bag,
+    .flag = 0, 
+    .script =  NULL,
+    .func = CB2_BagMenuFromStartMenu
   },
   [STARTMENU_PLAYER]  = {
     .id =  STARTMENU_PLAYER, 
-    .text = (u8*) NULL,
-    .flag = (u16) 0, 
-    .script = (u8*) NULL,
-    .func = (void*) CB2_PlayerTrainerCardFromStartMenu
+    .text = NULL,     // [PLAYER] doesn't work for reason 
+    .flag =  0, 
+    .script = NULL,
+    .func = CB2_PlayerTrainerCardFromStartMenu
   },
   [STARTMENU_SAVE]    = {
     .id =  STARTMENU_SAVE, 
-    .text = (u8*) gText_StartMenu_Save,.flag = (u16) 0, 
-    .script = (u8*) Script_SaveGame,
-    .func = (void*) NULL
+    .text =  (u8*) gText_StartMenu_Save,
+    .flag =  0, 
+    .script = Script_SaveGame,
+    .func = NULL
   },
   [STARTMENU_OPTION]  = {
     .id =  STARTMENU_OPTION, 
-    .text = gText_StartMenu_Option,
+    .text = (u8*) gText_StartMenu_Option,
     .flag = 0, 
     .script = NULL,
     .func = CB2_OptionMenuFromStartMenu
+  },
+  [STARTMENU_RETIRE]  = {
+    .id =  STARTMENU_RETIRE, 
+    .text = (u8*) gText_StartMenu_Retire,
+    .flag = FLAG_SYS_SAFARI_MODE, 
+    .script = Script_Retire,
+    .func = NULL
   },
  }; 
 
@@ -329,6 +339,7 @@ static bool8 InitStartMenuGUI(void)
   DrawIcons();
   PrintGUIMapName(); 
   PrintGUIMenuItemsName();
+  if (FlagGet(FLAG_SYS_SAFARI_MODE)) SetupSafariZoneStatsText();
   PrintAndUpdateTimeText();
   CreateScrollbar();
   CommitWindows();
@@ -414,8 +425,8 @@ static void Task_RunStartMenuOptionFuncOrScript(u8 taskId)
       SetMainCallback2(sStartMenuOptionsTable[onscreenmenuitems[cpos]].func);
     else
     {
-      SetMainCallback2(CB2_ReturnToField);
       ScriptContext1_SetupScript(sStartMenuOptionsTable[onscreenmenuitems[cpos]].script); 
+      SetMainCallback2(CB2_ReturnToField);
     }
     FreeAndCloseStartMenu(taskId);
   }
@@ -441,6 +452,7 @@ static void SetUpStartMenu_NormalField(void)
   { 
     if (sStartMenuOptionsTable[i].flag!=0 && !FlagGet(sStartMenuOptionsTable[i].flag)) 
       continue;
+    if (FlagGet(FLAG_SYS_SAFARI_MODE) && i == STARTMENU_SAVE) continue;
     menuitems[cursor] = sStartMenuOptionsTable[i].id;
     cursor++;
   } 
@@ -449,6 +461,7 @@ static void SetUpStartMenu_NormalField(void)
     scrolloffset = 0;
   CalculateAndConfigureOnScreenOptions();
 }
+
 
 void PanelCallBack(struct Sprite *sprite) 
 {
@@ -508,7 +521,8 @@ static void DrawPanels(void)
   LoadSpriteSheet(&ExitSpriteSheet);
   u8 SpriteId = CreateSprite(&ExitSpriteTemplate, 240-16, 160-9, 0);
   gSprites[SpriteId].data[0] = 0xFF;
-}
+} 
+
 
 static void DrawIcons(void) 
 {
@@ -689,7 +703,9 @@ const u8 * sDayNames[] =
   gText_Fri,
   gText_Sat,
 };
+
 extern u8 gText_StartMenu_TimeBase_12Hr[];
+
 static void PrintAndUpdateTimeText()
 {
 	const u8* amPMString = (gClock.hour >= 12) ? gText_PM : gText_AM;
@@ -700,4 +716,13 @@ static void PrintAndUpdateTimeText()
 //	AddTextPrinterParameterized(sTimeWindowId, 2, gStringVar4, 4, 3, 0xFF, NULL);
   WindowPrint(WIN_TOPBAR_TIME, 0, 3, 0, &sWhiteText, 0 ,gStringVar4);
   WindowPrint(WIN_TOPBAR_TIME, 0, 63, 0, &sWhiteText, 0 ,amPMString);
+}
+
+
+static void SetupSafariZoneStatsText(void) 
+{
+  ConvertIntToDecimalStringN(gStringVar1, gNumSafariBalls, STR_CONV_MODE_RIGHT_ALIGN, 2);
+  ConvertIntToDecimalStringN(gStringVar2, gSafariZoneStepCounter , STR_CONV_MODE_RIGHT_ALIGN, 3);
+  StringExpandPlaceholders(gStringVar4, gText_SafariZoneStats);
+  WindowPrint(WIN_TOPBAR, 0, 60, 0, &sWhiteText, 0, gStringVar4);
 }

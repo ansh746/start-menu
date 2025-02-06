@@ -13,8 +13,8 @@ SAVE
 #org @gText_StartMenu_Option
 OPTIONS
 
-#org @gText_StartMenu_Option2
-New Option
+#org @gText_StartMenu_Retire
+RETIRE
 
 #org @gText_Mon
 MON.
@@ -45,3 +45,6 @@ PM
 
 #org @gText_StartMenu_TimeBase_12Hr
 [BUFFER3] [BUFFER1]:[BUFFER2] 
+
+#org @gText_SafariZoneStats
+BALLS: [BUFFER1]   [BUFFER2]/600

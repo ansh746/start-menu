@@ -20,3 +20,9 @@ Script_SaveGame:
 Script_CallStartMenu:
   callasm StartMenu_Init +1
   end 
+  
+.global Script_Retire
+
+Script_Retire:
+   callasm 0x080A0F3D
+   end

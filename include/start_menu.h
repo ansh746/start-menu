@@ -6,14 +6,29 @@
 #include "bg.h" 
 #include "window.h" 
 #include "text.h"
+#include "../src/graphics.h"
 
 #define PANEL_X 34
 #define PANEL_Y 41 
 #define HSPACING 20
 #define VSPACING 6
-
-
 #define icon_template(gfxtag) {.tileTag = (u16) gfxtag, .paletteTag = (u16) gfxtag, .oam = &sIconOamData, .anims = sAnimCmdTable_Icon, .images = NULL,.affineAnims = gDummySpriteAffineAnimTable, .callback = StartMenuIconCallback}
+
+extern u8* GetMapName(u8* dest, u16 regionMapId, u16 padLength);
+extern u8  GetCurrentRegionMapSectionId(void);
+extern void CB2_OpenPokedexFromStartMenu(void);
+extern void CB2_PartyMenuFromStartMenu(void);
+extern void CB2_BagMenuFromStartMenu(void); 
+extern void CB2_OptionsMenuFromStartMenu(void);   
+void CB2_ReturnToField(void);
+extern bool8  StartMenuPokedexCallback(void);
+extern bool8  StartMenuPokemonCallback(void);
+extern bool8  StartMenuBagCallback(void);
+extern bool8  StartMenuPlayerCallback(void);
+extern bool8  StartMenuOptionCallback(void);
+
+
+
 enum BGs
 {
 	BG_TEXT,
@@ -22,20 +37,7 @@ enum BGs
 	BG_BACKGROUND,
 }; 
 
-enum 
-{
-  GFXTAG_PANEL,
-  GFXTAG_EXIT,
-  GFXTAG_POKEDEX,
-  GFXTAG_POKEMON,
-  GFXTAG_BAG,
-  GFXTAG_PLAYER,
-  GFXTAG_SAVE,
-  GFXTAG_OPTIONS,
-  GFXTAG_SCROLLBAR,
-};
-
-enum 
+enum StartMenuOptions
 {
   STARTMENU_POKEDEX = 0,
   STARTMENU_POKEMON,
@@ -43,6 +45,7 @@ enum
   STARTMENU_PLAYER, 
   STARTMENU_SAVE,
   STARTMENU_OPTION,
+  STARTMENU_RETIRE,
   MAX_STARTMENU_ITEMS
 };
 
@@ -53,49 +56,14 @@ struct StartMenuIcon
   const struct SpriteTemplate sprtemplate;
 }; 
 
-
-extern void Field_AskSaveTheGame(void);
-void PanelCallBack(struct Sprite *sprite);
-void StartMenuIconCallback(struct Sprite *sprite);
-void ScrollBarCallback(struct Sprite *sprite);
-u8* __attribute__((long_call)) GetMapName(u8* dest, u16 regionMapId, u16 padLength);
-u8 __attribute__((long_call)) GetCurrentRegionMapSectionId(void);
-s16 __attribute__((long_call)) Sin2(u16 angle); 
-extern void CB2_OpenPokedexFromStartMenu(void);
-extern void CB2_PartyMenuFromStartMenu(void);
-extern void CB2_BagMenuFromStartMenu(void); 
-extern void CB2_OptionsMenuFromStartMenu(void); 
-extern const u8 Script_SaveGame[];  
-void __attribute__((long_call)) CB2_ReturnToField(void);
-bool8 __attribute__((long_call)) StartMenuPokedexCallback(void);
-bool8 __attribute__((long_call)) StartMenuPokemonCallback(void);
-bool8 __attribute__((long_call)) StartMenuBagCallback(void);
-bool8 __attribute__((long_call)) StartMenuPlayerCallback(void);
-bool8 __attribute__((long_call)) StartMenuOptionCallback(void);
-
-
-//Gfx Data
-extern const u8 panelTiles[]; 
-extern const u16 panelPal[];  
-extern const u8 exitTiles[];
-extern const u16 exitPal[];
-extern const u8 pokedexTiles[];
-extern const u16 pokedexPal[];
-extern const u8 pokemonTiles[];
-extern const u16 pokemonPal[];
-extern const u8 bagTiles[];
-extern const u16 bagPal[];
-extern const u8 playerTiles[];
-extern const u16 playerPal[];
-extern const u8 saveTiles[];
-extern const u16 savePal[];
-extern const u8 optionsTiles[];
-extern const u16 optionsPal[];
-extern const u8 scrollbarTiles[];
-extern const u16 scrollbarPal[];
-extern const u8 StartMenuBgTiles[]; 
-extern const u8 StartMenuBgMap[];
-extern const u16 StartMenuBgPal[];
+struct StartMenuOption 
+{
+  u8 id;
+  u8 * text;
+  u16 flag; 
+  u8 * script;
+  void (*func);
+};
 
 
 // Text
@@ -105,6 +73,12 @@ extern const u8 gText_StartMenu_Bag[];
 extern const u8 gText_StartMenu_Player[];
 extern const u8 gText_StartMenu_Save[];
 extern const u8 gText_StartMenu_Option[]; 
+extern const u8 gText_StartMenu_Retire[]; 
+
+// Safari Zone Stats text
+extern const u8 gText_SafariZoneStats[];
+
+//Time strings
 extern const u8 gText_Sun[];
 extern const u8 gText_Mon[];
 extern const u8 gText_Tue[];
@@ -114,7 +88,10 @@ extern const u8 gText_Fri[];
 extern const u8 gText_Sat[]; 
 extern const u8 gText_AM[]; 
 extern const u8 gText_PM[]; 
-extern const u8 gText_StartMenu_Option2[];
+
+// Scripts 
+extern u8 Script_SaveGame[];
+extern u8 Script_Retire[];
 
 static const struct BgTemplate sStartMenuBgTemplates[] =
 {
@@ -160,176 +137,6 @@ static const struct BgTemplate sStartMenuBgTemplates[] =
 	}, 
 }; 
 
-static const struct SpriteSheet PanelSpriteSheet = {panelTiles, (64*64*4)/2, GFXTAG_PANEL };
-static const struct SpritePalette PanelSpritePalette = {panelPal, GFXTAG_PANEL};
-static const struct OamData sPanelOam =
-{
-	.affineMode = ST_OAM_AFFINE_OFF,
-	.objMode = ST_OAM_OBJ_BLEND,
-	.shape = SPRITE_SHAPE(64x64),
-	.size = SPRITE_SIZE(64x64),
-	.priority = 1, //Above other sprites
-};
-
-static const union AnimCmd sAnimCmdPanelUnselected1[] =
-{
-	ANIMCMD_FRAME(0, 0),
-	ANIMCMD_END
-}; 
-
-static const union AnimCmd sAnimCmdPanelUnselected2[] =
-{
-	ANIMCMD_FRAME(64, 0),
-	ANIMCMD_END
-};  
-static const union AnimCmd sAnimCmdPanelSelected1[] =
-{
-	ANIMCMD_FRAME(128, 0),
-	ANIMCMD_END
-}; 
-
-static const union AnimCmd sAnimCmdPanelSelected2[] =
-{
-	ANIMCMD_FRAME(192, 0),       
-	ANIMCMD_JUMP(0) 
-};  
-
-
-static const union AnimCmd *const sAnimCmdTable_Panel1[] =
-{
-	sAnimCmdPanelUnselected1,
-	sAnimCmdPanelSelected1,
-	
-}; 
-
-static const union AnimCmd *const sAnimCmdTable_Panel2[] =
-{
-	sAnimCmdPanelUnselected2,
-	sAnimCmdPanelSelected2,
-	
-};  
-
-static const struct SpriteTemplate sPanel1SpriteTemplate =
-{
-	.tileTag = GFXTAG_PANEL,
-	.paletteTag = GFXTAG_PANEL,
-	.oam = &sPanelOam,
-	.anims = sAnimCmdTable_Panel1,
-	.images = NULL,
-	.affineAnims = gDummySpriteAffineAnimTable,
-	.callback = PanelCallBack,
-}; 
-static const struct SpriteTemplate sPanel2SpriteTemplate =
-{
-	.tileTag = GFXTAG_PANEL,
-	.paletteTag = GFXTAG_PANEL,
-	.oam = &sPanelOam,
-	.anims = sAnimCmdTable_Panel2,
-	.images = NULL,
-	.affineAnims = gDummySpriteAffineAnimTable,
-	.callback = PanelCallBack,
-}; 
-
-
-// Exit Sprite
-static const struct SpriteSheet ExitSpriteSheet = {exitTiles, 16*16, GFXTAG_EXIT };
-static const struct SpritePalette ExitSpritePalette = {exitPal, GFXTAG_EXIT};
-static const struct OamData sExitIconOam =
-{
-	.affineMode = ST_OAM_AFFINE_OFF,
-	.objMode = ST_OAM_OBJ_NORMAL,
-	.shape = SPRITE_SHAPE(16x16),
-	.size = SPRITE_SIZE(16x16),
-	.priority = 1, //Above other sprites
-};
-
-static const union AnimCmd sAnimCmdExit[] =
-{
-	ANIMCMD_FRAME(0, 0),
-	ANIMCMD_END
-};
-static const union AnimCmd sAnimCmdExitSelected[] =
-{
-	ANIMCMD_FRAME(4, 0),
-	ANIMCMD_END
-}; 
-static const union AnimCmd *const sAnimCmdTable_Exit[] =
-{
-	sAnimCmdExit,
-	sAnimCmdExitSelected
-};   
-
-
-static const struct SpriteTemplate ExitSpriteTemplate =
-{
-	.tileTag = GFXTAG_EXIT,
-	.paletteTag = GFXTAG_EXIT,
-	.oam = &sExitIconOam,
-	.anims = sAnimCmdTable_Exit,
-	.images = NULL,
-	.affineAnims = gDummySpriteAffineAnimTable,
-	.callback = PanelCallBack,
-}; 
-
-// Pokedex Sprite
-
-static const struct OamData sIconOamData =
-{
-	.affineMode = ST_OAM_AFFINE_OFF,
-	.objMode = ST_OAM_OBJ_NORMAL,
-	.shape = SPRITE_SHAPE(32x32),
-	.size = SPRITE_SIZE(32x32),
-	.priority = 1, //Above other sprites
-};
-static const struct OamData ScrollBarOamData =
-{
-	.affineMode = ST_OAM_AFFINE_OFF,
-	.objMode = ST_OAM_OBJ_NORMAL,
-	.shape = SPRITE_SHAPE(32x32),
-	.size = SPRITE_SIZE(32x32),
-	.priority = 1, //Above other sprites
-};
-
-static const union AnimCmd sAnimCmdIcon[] =
-{
-	ANIMCMD_FRAME(0, 0),
-	ANIMCMD_END
-};
-static const union AnimCmd sAnimCmdIconSelected[] =
-{
-	ANIMCMD_FRAME(16, 0),
-	ANIMCMD_END
-}; 
-static const union AnimCmd *const sAnimCmdTable_Icon[] =
-{
-	sAnimCmdIcon,
-	sAnimCmdIconSelected
-};   
-
-static const struct SpriteSheet ScrollBarSpriteSheet = {scrollbarTiles, 32*16, GFXTAG_SCROLLBAR};
-static const struct SpritePalette ScrollBarSpritePalette = {scrollbarPal, GFXTAG_SCROLLBAR};
-
-static const union AnimCmd AnimCmdScrollbar[] = 
-{
-  ANIMCMD_FRAME(0, 0),
-  ANIMCMD_END,
-}; 
-static const union AnimCmd *const sAnimCmdTable_Scrollbar[] =
-{
-	AnimCmdScrollbar
-};   
-
-
-static const struct SpriteTemplate ScrollBarSpriteTemplate =
-{
-  .tileTag = GFXTAG_SCROLLBAR,
-	.paletteTag = GFXTAG_SCROLLBAR,
-	.oam = &ScrollBarOamData,
-	.anims = sAnimCmdTable_Scrollbar,
-	.images = NULL,
-	.affineAnims = gDummySpriteAffineAnimTable,
-	.callback = ScrollBarCallback,
-};
 
 static struct StartMenuIcon StartMenuIconTable[] = 
 {
@@ -369,9 +176,24 @@ static struct StartMenuIcon StartMenuIconTable[] =
     .spritepalette = {optionsPal, GFXTAG_OPTIONS},
     .sprtemplate = icon_template(GFXTAG_OPTIONS)
   },
+  [STARTMENU_RETIRE] =
+  {
+    .spritesheet = {exitTiles, 16*16 , GFXTAG_RETIRE},
+    .spritepalette = {exitPal, GFXTAG_RETIRE},
+    .sprtemplate =
+     {
+        .tileTag = GFXTAG_RETIRE,
+        .paletteTag = GFXTAG_RETIRE,
+        .oam = &sExitIconOam,
+        .anims = sAnimCmdTable_Exit,
+        .images = NULL,
+        .affineAnims = gDummySpriteAffineAnimTable,
+        .callback = PanelCallBack,  
+     },
+  }
 };
 
-// Text 
+// Text fonts
 static const struct TextColor sWhiteText =
 {
 	.bgColor = TEXT_COLOR_TRANSPARENT,
@@ -379,16 +201,6 @@ static const struct TextColor sWhiteText =
 	.shadowColor = TEXT_COLOR_DARK_GRAY,
 }; 
 
-
-
-struct StartMenuOption 
-{
-  u8 id;
-  u8 * text;
-  u16 flag; 
-  u8 * script;
-  void (*func);
-};
 
 
 
