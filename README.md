@@ -1,6 +1,9 @@
 # 👀 What is this? 
 A custom start menu for Fire Red.
-
+Normal:
+![](preview.png)
+Safari Zone:
+![](preview_safari_zone.png)
 ## ✨ Features
 - BW styled UI
 - Configurable to add more than 6 default options.
@@ -33,5 +36,3 @@ The code will start compiling, and generate a output rom `test.gba` in same dire
 Naturally, test it in an emulator.
 
 ### ➕ Adding New Options To Start Menu
-
-
