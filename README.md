@@ -1,10 +1,10 @@
 # 👀 What is this? 
 ---
 A custom start menu for Fire Red.
-Normal:
-![](preview.png)
-Safari Zone:
-![](preview_safari_zone.png)
+Normal: <br> 
+![](preview.png) <br>
+Safari Zone: <br> 
+![](preview_safari_zone.png) <br>
 ## ✨ Features
 ---
 - BW styled UI
@@ -40,13 +40,13 @@ Naturally, test it in an emulator.
 
 ### ➕ Adding New Options To Start Menu
 ____
-New options can be added to the start menu. Let's try to add this town map option for instance. 
-![](townmap.gif)
+New options can be added to the start menu. Let's try to add this town map option for instance. <br>
+![](townmap.gif) <br>
 #### 🖼️ Step 1 : Defining the gfx data for start menu option icon
 
 The icon should be 32x32, 16 colors sprite with 2 frames. For Town Map, we'll be taking this icon. <br>
-↶ First Frame: When Town Map is Unselected
-![](graphics/sprites/TownMap.png) ← Second Frame: When Town Map is currently selected in start menu
+↶ First Frame: When Town Map is Unselected <br>
+![](graphics/sprites/TownMap.png) ← Second Frame: When Town Map is currently selected in start menu <br> 
 
 
 Now, having the icon `TownMap.png` ready, indexed to 16 colors, move it to `graphics/sprites`. 
