@@ -1,17 +1,14 @@
 # 👀 What is this? 
----
 A custom start menu for Fire Red.
 Normal: <br> 
 ![](preview.png) <br>
 Safari Zone: <br> 
 ![](preview_safari_zone.png) <br>
 ## ✨ Features
----
 - BW styled UI
 - Configurable to add more than 6 default options.
 
 # ❓ How to use?
----
 Same as CFRU, `python 3.6+` and `devkitARM` are required to compile.<br>
 
 ### 💾  Adding your rom  
@@ -39,7 +36,6 @@ The code will start compiling, and generate a output rom `test.gba` in same dire
 Naturally, test it in an emulator.
 
 ### ➕ Adding New Options To Start Menu
-____
 New options can be added to the start menu. Let's try to add this town map option for instance. <br>
 ![](townmap.gif) <br>
 #### 🖼️ Step 1 : Defining the gfx data for start menu option icon
