@@ -149,7 +149,6 @@ static void SetupSafariZoneStatsText(void) ;
 
 static const struct StartMenuOption sStartMenuOptionsTable[] = 
 {
-  [STARTMENU_POKEDEX] =
   {
     .id =  STARTMENU_POKEDEX,
     .text = (u8*) gText_StartMenu_Pokedex,
@@ -157,42 +156,42 @@ static const struct StartMenuOption sStartMenuOptionsTable[] =
     .script = NULL,
     .func = CB2_OpenPokedexFromStartMenu
   },
-  [STARTMENU_POKEMON] = {
+  {
     .id =  STARTMENU_POKEMON,
     .text =  (u8*) gText_StartMenu_Pokemon,
     .flag =  FLAG_SYS_POKEMON_GET,
     .script =  NULL,
     .func = CB2_PartyMenuFromStartMenu
   },
-  [STARTMENU_BAG]     = {
+  {
     .id =  STARTMENU_BAG,
     .text =  (u8*) gText_StartMenu_Bag,
     .flag = 0, 
     .script =  NULL,
     .func = CB2_BagMenuFromStartMenu
   },
-  [STARTMENU_PLAYER]  = {
+  {
     .id =  STARTMENU_PLAYER, 
     .text = NULL,     // [PLAYER] doesn't work for reason 
     .flag =  0, 
     .script = NULL,
     .func = CB2_PlayerTrainerCardFromStartMenu
   },
-  [STARTMENU_SAVE]    = {
+  {
     .id =  STARTMENU_SAVE, 
     .text =  (u8*) gText_StartMenu_Save,
     .flag =  0, 
     .script = Script_SaveGame,
     .func = NULL
   },
-  [STARTMENU_OPTION]  = {
+  {
     .id =  STARTMENU_OPTION, 
     .text = (u8*) gText_StartMenu_Option,
     .flag = 0, 
     .script = NULL,
     .func = CB2_OptionMenuFromStartMenu
   },
-  [STARTMENU_RETIRE]  = {
+  {
     .id =  STARTMENU_RETIRE, 
     .text = (u8*) gText_StartMenu_Retire,
     .flag = FLAG_SYS_SAFARI_MODE, 
