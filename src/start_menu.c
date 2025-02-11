@@ -518,7 +518,7 @@ static void DrawPanels(void)
   }
   LoadSpritePalette(&ExitSpritePalette);
   LoadSpriteSheet(&ExitSpriteSheet);
-  u8 SpriteId = CreateSprite(&ExitSpriteTemplate, 240-16, 160-9, 0);
+  u8 SpriteId = CreateSprite(&ExitSpriteTemplate, 240-16, 160-11, 0);
   gSprites[SpriteId].data[0] = 0xFF;
 } 
 
@@ -597,7 +597,7 @@ static void CommitWindows(void)
 static void PrintGUIMapName(void)
 { 
   	GetMapName(gStringVar4, GetCurrentRegionMapSectionId(), 0); 
-  	WindowPrint(WIN_BOTTOMBAR, 0, 2, 10, &sWhiteText, 0, gStringVar4); 
+  	WindowPrint(WIN_BOTTOMBAR, 0, 2, 13, &sWhiteText, 0, gStringVar4); 
 }
 
 static void PrintGUIMenuItemsName(void) 
