@@ -1,5 +1,5 @@
 # 👀 What is this? 
-A custom start menu for Fire Red.
+A custom start menu for Fire Red. <br>
 Normal: <br> 
 ![](preview.png) <br>
 Safari Zone: <br> 
