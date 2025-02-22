@@ -26,7 +26,7 @@ extern bool8  StartMenuPokemonCallback(void);
 extern bool8  StartMenuBagCallback(void);
 extern bool8  StartMenuPlayerCallback(void);
 extern bool8  StartMenuOptionCallback(void);
-
+void FieldCB_WarpExitFadeFromBlack(void);
 
 
 enum BGs

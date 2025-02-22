@@ -123,6 +123,7 @@ static void ClearTasksAndGraphicalStructs(void);
 static void ClearVramOamPlttRegs(void);
 static void VBlankCB_StartMenu(void); 
 static void MainCB2_StartMenu(void);
+static void ReturnToFieldFromStartMenu(void);
 static bool8 InitStartMenuGUI(void); 
 static void Task_StartMenuFadeIn(u8 taskId); 
 static void Task_StartMenuWaitForKeyPress(u8 taskId); 
@@ -425,7 +426,7 @@ static void Task_RunStartMenuOptionFuncOrScript(u8 taskId)
     else
     {
       ScriptContext1_SetupScript(sStartMenuOptionsTable[onscreenmenuitems[cpos]].script); 
-      SetMainCallback2(CB2_ReturnToField);
+      SetMainCallback2(ReturnToFieldFromStartMenu);
     }
     FreeAndCloseStartMenu(taskId);
   }
@@ -566,9 +567,14 @@ static void Task_StartMenuFadeOut(u8 taskId)
 	if (!gPaletteFade.active)
 	{
 	  gHelpSystemEnabled = TRUE;
-		SetMainCallback2(CB2_ReturnToField);
+		SetMainCallback2(ReturnToFieldFromStartMenu);
 		FreeAndCloseStartMenu(taskId); 
 	}
+}
+static void ReturnToFieldFromStartMenu(void) {
+  FieldClearVBlankHBlankCallbacks();
+  gFieldCallback = FieldCB_WarpExitFadeFromBlack;
+  CB2_ReturnToField();
 }
 
 static void CleanWindow(u8 windowId)

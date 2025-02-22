@@ -1913,3 +1913,5 @@ gNumSafariBalls = 0x2039994;
 gSafariZoneStepCounter = 0x2039996;
 
 gClock = 0x300553C;
+FieldClearVBlankHBlankCallbacks = 0x80569bc | 1;
+FieldCB_WarpExitFadeFromBlack = 0x807df7c | 1;
