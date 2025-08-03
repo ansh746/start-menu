@@ -360,3 +360,7 @@ static const struct StartMenuOption sStartMenuOptionsTable[] =
 
 ---
 
+
+### Note:
+- The clock in start menu requires the rtc hack to be applied to the rom in order to work. 
+- If you are using CFRU which also adds rtc to the rom, please update the address of the `gClock` in `BPRE.ld` to match with CFRU's rtc gClock address before injecting the code into your rom.
