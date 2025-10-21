@@ -590,8 +590,8 @@ static void CleanWindows(void)
 
 static void CommitWindow(u8 windowId)
 {
-	CopyWindowToVram(windowId,COPYWIN_BOTH);
 	PutWindowTilemap(windowId);
+	CopyWindowToVram(windowId,COPYWIN_BOTH);
 }
 
 static void CommitWindows(void)
